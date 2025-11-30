@@ -1,0 +1,40 @@
+networks:
+  web:
+    external: true
+
+services:
+  homeassistant:
+    container_name: home-assistant
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+
+    volumes:
+      - /home/martin/services/home-assistant/config:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro
+
+    restart: unless-stopped
+    privileged: true
+
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
+
+    networks:
+      - web
+
+    labels:
+      - "traefik.enable=true"
+
+      # HTTP router
+      - "traefik.http.routers.ha.rule=Host(`homeassistant.home`)"
+      - "traefik.http.routers.ha.entrypoints=web"
+      - "traefik.http.routers.ha.service=ha"
+
+      # HTTPS router
+      - "traefik.http.routers.ha-secure.rule=Host(`homeassistant.home`)"
+      - "traefik.http.routers.ha-secure.entrypoints=websecure"
+      - "traefik.http.routers.ha-secure.tls=true"
+      - "traefik.http.routers.ha-secure.service=ha"
+
+      # Internal HA service
+      - "traefik.http.services.ha.loadbalancer.server.port=8123"
+
