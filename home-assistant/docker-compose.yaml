@@ -18,7 +18,7 @@ services:
     devices:
       - "/dev/ttyUSB0:/dev/ttyUSB0"
 
-    network_mode: host
+    network-mode: host
     labels:
       - "traefik.enable=true"
 
