@@ -1,0 +1,33 @@
+services:
+  tailscale:
+    image: tailscale/tailscale:latest
+    hostname: traefik
+    environment:
+      - TS_AUTHKEY=${TAILSCALE_KEY}
+      - TS_STATE_DIR=/var/lib/tailscale
+    volumes:
+      - tailscale-data:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    restart: unless-stopped
+
+  traefik:
+    image: traefik:v3.5
+    depends_on:
+      - tailscale
+    network_mode: service:tailscale
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--api.dashboard=true"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+volumes:
+  tailscale-data:
+
